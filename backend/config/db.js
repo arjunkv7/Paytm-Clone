@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const dbUrl = 'mongodb+srv://Arjunroot:TsK6It1f4HvMdGwM@cluster0.scesfd7.mongodb.net/paytm';
+const dbUrl = '';
 
 async function connectToDb() {
     await mongoose.connect(dbUrl);
