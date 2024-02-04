@@ -3,7 +3,7 @@ const dbUrl = 'mongodb+srv://Arjunroot:TsK6It1f4HvMdGwM@cluster0.scesfd7.mongodb
 
 async function connectToDb() {
     await mongoose.connect(dbUrl);
-    console.log("DB connected successfully")
+    console.log("DB connected successfully");
 }
 
 module.exports = connectToDb;

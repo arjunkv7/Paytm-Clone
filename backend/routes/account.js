@@ -5,7 +5,7 @@ const { default: mongoose, Types } = require('mongoose');
 const router = express.Router();
 
 router.get('/balance', async (req, res) => {
-    let userAccount = Account.findOne({
+    let userAccount = await Account.findOne({
         userId: req.userId
     });
 
@@ -14,10 +14,10 @@ router.get('/balance', async (req, res) => {
     });
 });
 
-router.post('/transfer', async (req, res) => {
+router.post('/transfer', async (req, res, next) => {
     let userId = req.userId;
     let session = mongoose.startSession();
-
+    (await session).startTransaction()
     try {
         let { to, amount } = req.body;
         let toAccount = await Account.findOne({
@@ -30,8 +30,7 @@ router.post('/transfer', async (req, res) => {
                 message: "Invalid account"
             })
         }
-
-        let userAccount = await Account.findByOne(userId);
+        let userAccount = await Account.findOne({userId});
         if (userAccount.amount < amount) {
             (await session).abortTransaction()
             return res.status(400).json({
@@ -52,18 +51,19 @@ router.post('/transfer', async (req, res) => {
         });
         if (!updatedFromuser || !updatedToUser) {
             (await session).abortTransaction();
-            res.status(400).json({
+            return res.status(400).json({
                 message: "Transaction failed"
             });
         }
 
         (await session).commitTransaction();
-        res.status(200).json({
+        return res.status(200).json({
             message: "Transfer successful"
         });
     } catch (error) {
         console.log(error);
         (await session).abortTransaction;
+        next(error)
 
     }
 });

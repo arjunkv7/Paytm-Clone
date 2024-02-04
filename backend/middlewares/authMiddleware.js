@@ -1,22 +1,23 @@
-const { JWT_SECRET } = require("./config");
+const { JWT_SECRET } = require("../config/config");
 const jwt = require("jsonwebtoken");
 
 function authMiddleWare(req, res, next) {
-    let authHeader = req.headers.Authorization;
-
-    if (!authHeader || authHeader.startsWith('Bearer ')) {
+    let authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return res.status(400).json({
             msg: "Something went wrong"
         });
     }
     let token = authHeader.split(' ')[1];
+    console.log(token)
     try {
-        let userId = jwt.verify(token, JWT_SECRET);
-        if (!userId) return res.status(400).json({
+        let decoded = jwt.verify(token, JWT_SECRET);
+        if (!decoded) return res.status(400).json({
             msg: "Something went wrong"
         });
 
-        req.userId = userId;
+        req.userId = decoded.userId;
         next()
     } catch (error) {
         console.log(error)

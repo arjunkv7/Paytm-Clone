@@ -10,22 +10,22 @@ const { Types } = require('mongoose');
 const Account = require('../model/Account');
 
 let signupPayload = zod.object({
-    username: zod.string().minLength(4),
-    firstName: zod.string().maxLength(50),
-    lastName: zod.string().maxLength(50),
+    username: zod.string().min(4),
+    firstName: zod.string().max(50),
+    lastName: zod.string().max(50),
     password: zod.string()
 });
 
 let signInPayload = zod.object({
     username: zod.string(),
-    password: zod.string
+    password: zod.string()
 });
 
 router.post('/signup', async (req, res) => {
     let parsedPayload = signupPayload.safeParse(req.body);
     if (!parsedPayload.success) {
         return res.status(411).json({
-            message: "Email already taken / Incorrect inputs"
+            message: "Incorrect inputs"
         });
     }
     let userExist = await UserModel.findOne({ username: req.body.username });
@@ -103,6 +103,7 @@ router.put('/', authMiddleWare, async (req, res) => {
     if (body.password) {
         updateObject.password = await bcrypt.hash(body.password, 10);
     }
+    delete updateObject.username;
     let updatedUser = await UserModel.findOneAndUpdate({
         _id: new Types.ObjectId(req.userId)
     }, updateObject);
@@ -116,6 +117,34 @@ router.put('/', authMiddleWare, async (req, res) => {
         msg: "Details upated successfully"
     })
 });
+
+router.get("/bulk", authMiddleWare, async (req, res) => {
+    let filter = req.query.filter || ""
+    console.log(req.userId)
+
+    let allUsers = await UserModel.find({
+        "$or": [
+            {
+                firstName: {
+                    "$regex": filter, "$options": "i"
+                }
+            },
+            {
+                lastName: {
+                    "$regex": filter, "$options": "i"
+                }
+            }
+        ],
+        _id: {
+            $ne: req.userId
+        }
+
+    }).select('firstName lastName _id');
+
+    res.status(200).json({
+        users: allUsers
+    })
+})
 
 
 module.exports = router;
